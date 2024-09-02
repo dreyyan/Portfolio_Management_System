@@ -1,4 +1,4 @@
-# Protfolio Management System
+# Portfolio Management System
 <h2>OOPS Project</h2>
 <h2>Overview</h2>
 The Portfolio Management System is a C++ application designed to manage and monitor the performance of various financial entities, including assets and liabilities, within a mutual fund. The system allows users to add, view, sort, and search for financial entities, making it easier to track the overall value and composition of a mutual fund.
