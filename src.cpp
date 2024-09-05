@@ -83,13 +83,19 @@ public:
 };
 
 class User {
+    static int globalID;
+    int userID;
     string username;
     string password;
     vector<MutualFund> userFunds;
 
 public:
     User(const string& username, const string& password) 
-        : username(username), password(password) {}
+        : username(username), password(password), userID(++globalID) {}
+
+    int getUserID() const {
+        return userID;
+    }
 
     string getUsername() const {
         return username;
@@ -104,32 +110,36 @@ public:
     }
 
     void showUserPortfolio() const {
-        cout << "User: " << username << "\n";
+        cout << "User ID: " << userID << " | Username: " << username << "\n";
         for (const auto& fund : userFunds) {
             fund.showPortfolio();
         }
     }
 };
 
+int User::globalID = 0;
+
 class PortfolioManagementSystem {
-    unordered_map<string, User> users;
+    unordered_map<int, User> users;
     User* loggedInUser = nullptr;
 
 public:
     void registerUser(const string& username, const string& password) {
-        users[username] = User(username, password);
+        User newUser(username, password);
+        users[newUser.getUserID()] = newUser;
+        cout << "User registered with ID: " << newUser.getUserID() << "\n";
     }
 
     bool loginUser(const string& username, const string& password) {
-        auto it = users.find(username);
-        if (it != users.end() && it->second.authenticate(password)) {
-            loggedInUser = &it->second;
-            cout << "Login successful!\n";
-            return true;
-        } else {
-            cout << "Login failed. Check your username and password.\n";
-            return false;
+        for (auto& [id, user] : users) {
+            if (user.getUsername() == username && user.authenticate(password)) {
+                loggedInUser = &user;
+                cout << "Login successful! User ID: " << loggedInUser->getUserID() << "\n";
+                return true;
+            }
         }
+        cout << "Login failed. Check your username and password.\n";
+        return false;
     }
 
     void logoutUser() {
@@ -140,25 +150,104 @@ public:
     User* getLoggedInUser() const {
         return loggedInUser;
     }
+
+    void addUserMutualFund() {
+        if (loggedInUser) {
+            string fundName;
+            cout << "Enter Mutual Fund name: ";
+            cin >> fundName;
+
+            MutualFund fund(fundName);
+
+            char choice;
+            do {
+                cout << "Add (A)sset or (L)iability or (Q)uit: ";
+                cin >> choice;
+
+                if (choice == 'A' || choice == 'L') {
+                    string entityName;
+                    double value;
+                    cout << "Enter name: ";
+                    cin >> entityName;
+                    cout << "Enter value: ";
+                    cin >> value;
+
+                    if (choice == 'A') {
+                        fund.addEntity(make_unique<Asset>(entityName, value));
+                    } else {
+                        fund.addEntity(make_unique<Liability>(entityName, value));
+                    }
+                }
+            } while (choice != 'Q');
+
+            loggedInUser->addMutualFund(fund);
+            cout << "Mutual Fund added successfully.\n";
+        } else {
+            cout << "No user is logged in.\n";
+        }
+    }
 };
 
 int main() {
+    fast;
     PortfolioManagementSystem pms;
-    pms.registerUser("john_doe", "password123");
+    int choice;
 
-    if (pms.loginUser("john_doe", "password123")) {
-        User* user = pms.getLoggedInUser();
-        
-        MutualFund mf1("Retirement Fund");
-        mf1.addEntity(make_unique<Asset>("Real Estate", 100000));
-        mf1.addEntity(make_unique<Liability>("Loan", -50000));
+    do {
+        cout << "\nPortfolio Management System Menu\n";
+        cout << "1. Register User\n";
+        cout << "2. Login User\n";
+        cout << "3. Add Mutual Fund to Portfolio\n";
+        cout << "4. View User Portfolio\n";
+        cout << "5. Logout\n";
+        cout << "6. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
 
-        user->addMutualFund(mf1);
-
-        user->showUserPortfolio();
-        
-        pms.logoutUser();
-    }
+        switch (choice) {
+            case 1: {
+                string username, password;
+                cout << "Enter username: ";
+                cin >> username;
+                cout << "Enter password: ";
+                cin >> password;
+                pms.registerUser(username, password);
+                break;
+            }
+            case 2: {
+                string username, password;
+                cout << "Enter username: ";
+                cin >> username;
+                cout << "Enter password: ";
+                cin >> password;
+                pms.loginUser(username, password);
+                break;
+            }
+            case 3: {
+                pms.addUserMutualFund();
+                break;
+            }
+            case 4: {
+                User* user = pms.getLoggedInUser();
+                if (user) {
+                    user->showUserPortfolio();
+                } else {
+                    cout << "No user is logged in.\n";
+                }
+                break;
+            }
+            case 5: {
+                pms.logoutUser();
+                break;
+            }
+            case 6: {
+                cout << "Exiting...\n";
+                break;
+            }
+            default:
+                cout << "Invalid choice! Please try again.\n";
+        }
+    } while (choice != 6);
 
     return 0;
 }
