@@ -81,87 +81,84 @@ public:
         return it != entities.end() ? it->get() : nullptr;
     }
 };
-int main() {
-    fast;
 
-    MutualFund myFund("Tech Growth Fund");
+class User {
+    string username;
+    string password;
+    vector<MutualFund> userFunds;
 
-    int choice;
-    do {
-        cout << "\n--- Mutual Fund Management ---\n";
-        cout << "1. Add Asset\n";
-        cout << "2. Add Liability\n";
-        cout << "3. Show Portfolio\n";
-        cout << "4. Sort Portfolio by Value\n";
-        cout << "5. Get Total Value of the Fund\n";
-        cout << "6. Find Entity by Name\n";
-        cout << "7. Exit\n";
-        cout << "Enter your choice: ";
-        cin >> choice;
+public:
+    User(const string& username, const string& password) 
+        : username(username), password(password) {}
 
-        switch (choice) {
-            case 1: {
-                string name;
-                double value;
-                cout << "Enter the Asset Name: ";
-                cin.ignore();
-                getline(cin, name);
-                cout << "Enter the Asset Value: $";
-                cin >> value;
-                myFund.addEntity(make_unique<Asset>(name, value));
-                cout << "Asset added successfully!\n";
-                break;
-            }
-            case 2: {
-                string name;
-                double value;
-                cout << "Enter the Liability Name: ";
-                cin.ignore();
-                getline(cin, name);
-                cout << "Enter the Liability Value: $";
-                cin >> value;
-                myFund.addEntity(make_unique<Liability>(name, value));
-                cout << "Liability added successfully!\n";
-                break;
-            }
-            case 3: {
-                cout << "Showing Portfolio:\n";
-                myFund.showPortfolio();
-                break;
-            }
-            case 4: {
-                myFund.sortPortfolioByValue();
-                cout << "Portfolio sorted by value successfully!\n";
-                break;
-            }
-            case 5: {
-                double totalValue = myFund.getTotalValue();
-                cout << "Total Value of the Mutual Fund: $" << totalValue << "\n";
-                break;
-            }
-            case 6: {
-                string name;
-                cout << "Enter the Entity Name to find: ";
-                cin.ignore();
-                getline(cin, name);
-                FinancialEntity* foundEntity = myFund.findEntityByName(name);
-                if (foundEntity) {
-                    cout << "Entity found:\n";
-                    foundEntity->showDetails();
-                } else {
-                    cout << "Entity '" << name << "' not found in the portfolio.\n";
-                }
-                break;
-            }
-            case 7: {
-                cout << "Exiting...\n";
-                break;
-            }
-            default: {
-                cout << "Invalid choice! Please try again.\n";
-            }
+    string getUsername() const {
+        return username;
+    }
+
+    bool authenticate(const string& pass) const {
+        return password == pass;
+    }
+
+    void addMutualFund(const MutualFund& fund) {
+        userFunds.push_back(fund);
+    }
+
+    void showUserPortfolio() const {
+        cout << "User: " << username << "\n";
+        for (const auto& fund : userFunds) {
+            fund.showPortfolio();
         }
-    } while (choice != 7);
+    }
+};
+
+class PortfolioManagementSystem {
+    unordered_map<string, User> users;
+    User* loggedInUser = nullptr;
+
+public:
+    void registerUser(const string& username, const string& password) {
+        users[username] = User(username, password);
+    }
+
+    bool loginUser(const string& username, const string& password) {
+        auto it = users.find(username);
+        if (it != users.end() && it->second.authenticate(password)) {
+            loggedInUser = &it->second;
+            cout << "Login successful!\n";
+            return true;
+        } else {
+            cout << "Login failed. Check your username and password.\n";
+            return false;
+        }
+    }
+
+    void logoutUser() {
+        loggedInUser = nullptr;
+        cout << "Logged out successfully.\n";
+    }
+
+    User* getLoggedInUser() const {
+        return loggedInUser;
+    }
+};
+
+int main() {
+    PortfolioManagementSystem pms;
+    pms.registerUser("john_doe", "password123");
+
+    if (pms.loginUser("john_doe", "password123")) {
+        User* user = pms.getLoggedInUser();
+        
+        MutualFund mf1("Retirement Fund");
+        mf1.addEntity(make_unique<Asset>("Real Estate", 100000));
+        mf1.addEntity(make_unique<Liability>("Loan", -50000));
+
+        user->addMutualFund(mf1);
+
+        user->showUserPortfolio();
+        
+        pms.logoutUser();
+    }
 
     return 0;
 }
