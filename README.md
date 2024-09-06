@@ -1,29 +1,43 @@
 # Portfolio Management System
-<h2>OOPS Project</h2>
-<h2>Overview</h2>
-The Portfolio Management System is a C++ application designed to manage and monitor the performance of various financial entities, including assets and liabilities, within a mutual fund. The system allows users to add, view, sort, and search for financial entities, making it easier to track the overall value and composition of a mutual fund.
 
-<h3>Features</h3>
-<strong>Asset and Liability Management:</strong> Add and manage different financial entities (Assets and Liabilities) within a mutual fund.<br>
-<strong>Portfolio Display</strong>: View the details of all assets and liabilities in the mutual fund.<br>
-<strong>Total Value Calculation</strong>: Calculate and display the total value of the mutual fund.<br>
-<strong>Sorting</strong>: Sort the portfolio based on the current value of the financial entities.<br>
-<strong>Entity Search</strong>: Search for specific financial entities by name within the portfolio.<br>
+The **Portfolio Management System** is a simple C++ application that allows users to manage their financial portfolios, including assets and liabilities. Each user can register, log in, and manage their mutual funds, which contain various financial entities such as assets and liabilities. The system provides functionality to view and sort these financial entities.
 
-<h2>Code Structure</h2>
-<h3>FinancialEntity (Base Class)</h3>
+## Features
 
-Represents a general financial entity with attributes like name and current value.
-Contains pure virtual functions for displaying details (showDetails) and getting the current value.
-<h3>Asset (Derived Class):</h3>
+- **User Registration and Login**: Users can register with a unique username and password. Each user is assigned a unique ID to avoid conflicts with identical usernames.
+- **Mutual Fund Management**: Users can add, view, and manage their mutual funds, which consist of various financial entities (assets and liabilities).
+- **Financial Entity Sorting**: Sort the portfolio by the value of assets or liabilities.
+- **Portfolio Overview**: View the total value and details of all financial entities in a user's portfolio.
 
-Represents an asset in the portfolio.
-Overrides showDetails to display asset-specific information.
-<h3>Liability (Derived Class):</h3>
+## How It Works
 
-Represents a liability in the portfolio.
-Overrides showDetails to display liability-specific information.
-<h3>MutualFund (Class):</h3>
+1. **Register a User**: 
+   - Users can register with a unique username and password. Each registered user is given a unique user ID.
 
-Manages a collection of financial entities (assets and liabilities).
-Provides functionalities to add entities, display the portfolio, calculate total value, sort entities by value, and search for entities by name.
+2. **Login to the System**:
+   - Users must log in with their username and password. After login, users can manage their financial portfolios.
+
+3. **Add Mutual Funds**:
+   - Once logged in, users can add mutual funds to their portfolio, which can consist of assets and liabilities. Users can enter the name and value of each financial entity.
+
+4. **View Portfolio**:
+   - Users can view their entire portfolio, including all mutual funds and their associated assets and liabilities.
+
+5. **Logout**:
+   - Users can log out to end their session.
+
+## Getting Started
+
+### Prerequisites
+
+To compile and run the project, you will need:
+
+- A C++ compiler such as g++ or clang.
+- Basic knowledge of C++ Standard Template Library (STL).
+
+### Compilation
+
+Use the following command to compile the program:
+
+```bash
+g++ -o portfolio_management main.cpp
