@@ -1,4 +1,8 @@
-#include <bits/stdc++.h>
+#include <iostream>   
+#include <vector>      
+#include <memory>      
+#include <algorithm>   
+#include <string>     
 #define fast std::ios::sync_with_stdio(false), std::cin.tie(NULL), std::cout.tie(NULL)
 #define ll long long
 using namespace std;
