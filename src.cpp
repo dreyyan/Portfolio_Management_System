@@ -24,6 +24,10 @@ public:
     virtual void showDetails() const = 0;
     virtual double getCurrentValue() const { return currentValue; }
     virtual string getName() const { return name; }
+    void setValue(double newValue)
+    {
+        currentValue = newValue;
+    }
 };
 
 class Asset : public FinancialEntity
@@ -230,22 +234,27 @@ public:
 
 class Transaction
 {
-    string entityName;
-    string type; // "Asset" or "Liability"
-    double value;
-    string date;
-
 public:
-    Transaction(const string &name, const string &type, double value, const string &date)
-        : entityName(name), type(type), value(value), date(date) {}
-
-    void showTransactionDetails() const
+    static void updateEntityValue(FinancialEntity &entity, double newValue)
     {
-        cout << "Transaction: " << entityName << " (" << type << ")\n"
-             << "Value: $" << value << "\n"
-             << "Date: " << date << "\n";
+        cout << "Updating " << entity.getName() << "'s value from $" << entity.getCurrentValue() << " to $" << newValue << "\n";
+        entity.setValue(newValue);
+    }
+
+    static void applyTransaction(MutualFund &fund, const string &entityName, double newValue)
+    {
+        FinancialEntity *entity = fund.findEntityByName(entityName);
+        if (entity)
+        {
+            updateEntityValue(*entity, newValue);
+        }
+        else
+        {
+            cout << "Entity with name " << entityName << " not found in the mutual fund.\n";
+        }
     }
 };
+
 
 int main()
 {
