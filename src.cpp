@@ -271,6 +271,7 @@ int main()
         cout << "4. View User Portfolio\n";
         cout << "5. Logout\n";
         cout << "6. Exit\n";
+        cout << "7. Apply Transaction (Update Asset/Liability)\n";
         cout << "Enter your choice: ";
         cin >> choice;
 
@@ -322,6 +323,34 @@ int main()
         case 6:
         {
             cout << "Exiting...\n";
+            break;
+        }
+         case 7:  
+        {
+            if (pms.getLoggedInUser())
+            {
+                string fundName, entityName;
+                double newValue;
+                cout << "Enter Mutual Fund name: ";
+                cin >> fundName;
+                cout << "Enter entity name (asset/liability) to update: ";
+                cin >> entityName;
+                cout << "Enter new value: ";
+                cin >> newValue;
+
+                for (const MutualFund &fund : pms.getLoggedInUser()->getFunds())
+                {
+                    if (fund.getFundName() == fundName)
+                    {
+                        Transaction::applyTransaction(fund, entityName, newValue);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                cout << "No user is logged in.\n";
+            }
             break;
         }
         default:
