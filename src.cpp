@@ -46,6 +46,7 @@ public:
     // Helper function to determine the type of the entity (Asset, Liability, Equity)
     virtual std::string getType() const = 0;
     virtual ~FinancialEntity() = default;
+
 };
 
 // Asset Class
@@ -60,6 +61,7 @@ public:
         cout << "Asset Name: " << name << "\n"
              << "Current Value: $" << currentValue << "\n";
     }
+
     std::string getType() const override { return "Asset"; }
 };
 
@@ -75,6 +77,7 @@ public:
         cout << "Liability Name: " << name << "\n"
              << "Current Value: $" << currentValue << "\n";
     }
+
     std::string getType() const override { return "Liability"; }
 };
 
@@ -107,6 +110,7 @@ public:
 class Transaction
 {
 public:
+
     static void buy(FinancialEntity &entity, double amount)
     {
         entity.addValue(amount);
@@ -122,6 +126,7 @@ public:
 
 class PortfolioManager
 {
+
 private:
     map<string, unique_ptr<FinancialEntity>> entities;
 
@@ -138,17 +143,80 @@ public:
         {
             if (type == "Asset")
             {
-                entities[name] = make_unique<Asset>(name, value);
+                if(value < 0)
+                {
+                    cout << "Asset value cannot be negative!\n";
+                    cout << "Shall I add in Liability instead? (y/n): ";
+                    char choice;
+                    cin >> choice;
+                    
+                    if(choice == 'y'|| choice == 'Y')
+                    {
+                        entities[name] = make_unique<Liability>(name, value);
+                    }
+                        
+                    else
+                    {
+                        entities[name] = make_unique<Asset>(name, -1*value);
+                    }
+                }
+                    
+                else
+                {
+                    entities[name] = make_unique<Asset>(name, value);
+                }
             }
 
             else if (type == "Liability")
             {
-                entities[name] = make_unique<Liability>(name, value);
+                if(value > 0)
+                {
+                    cout << "Liability value cannot be positive!\n";
+                    cout << "Shall I add in Asset instead? (y/n): ";
+                    char choice;
+                    cin >> choice;
+                    
+                    if(choice == 'y'|| choice == 'Y')
+                    {
+                        entities[name] = make_unique<Asset>(name, value);
+                    }
+                        
+                    else
+                    {
+                        entities[name] = make_unique<Liability>(name, -1*value);
+                    }
+                }
+                    
+                else
+                {
+                    entities[name] = make_unique<Liability>(name, value);
+                }
             }
 
             else if (type == "Equity")
             {
-                entities[name] = make_unique<Equity>(name, value);
+                if(value < 0)
+                {
+                    cout << "Equity value cannot be negative!\n";
+                    cout << "Shall I add in Liability instead? (y/n): ";
+                    char choice;
+                    cin >> choice;
+                    
+                    if(choice == 'y'|| choice == 'Y')
+                    {
+                        entities[name] = make_unique<Liability>(name, value);
+                    }
+                        
+                    else
+                    {
+                        entities[name] = make_unique<Equity>(name, -1*value);
+                    }
+                }
+                    
+                else
+                {
+                    entities[name] = make_unique<Equity>(name, value);
+                }
             }
 
             else
@@ -307,6 +375,7 @@ public:
     {
         return userPortfolios[currentUsername];
     }
+
 };
 
 class FileHandler
@@ -435,10 +504,12 @@ int main()
                         cin >> value;
                         portfolio.addEntity(name, value, type);
                     }
+                        
                     else if (userChoice == 2)
                     {
                         portfolio.showPortfolio();
                     }
+                        
                     else if (userChoice == 3)
                     {
                         string name;
@@ -449,6 +520,7 @@ int main()
                         cin >> amount;
                         portfolio.buyEntity(name, amount);
                     }
+                        
                     else if (userChoice == 4)
                     {
                         string name;
@@ -459,14 +531,17 @@ int main()
                         cin >> amount;
                         portfolio.sellEntity(name, amount);
                     }
+                        
                     else if (userChoice == 5)
                     {
                         filehandler.savePortfolio(portfolio, currentUser); // Save the portfolio
                     }
+                        
                     else if (userChoice == 6)
                     {
                         cout << "Total Portfolio Value: $" << portfolio.getTotalValue() << "\n";
                     }
+                        
                     else if (userChoice == 7)
                     {
                         string name;
@@ -474,16 +549,19 @@ int main()
                             cin >> name;
                             {
                                 FinancialEntity *entity = portfolio.searchEntity(name);
+                                
                                 if (entity) 
                                 {
                                     entity->showDetails();
                                 }
                             }
                     }
+                        
                     else if (userChoice == 8)
                     {
                         break; // Logout
                     }
+                        
                     else
                     {
                         cout << "Invalid choice! Please try again.\n";
@@ -495,6 +573,7 @@ int main()
         {
             break; // Exit
         }
+            
         else
         {
             cout << "Invalid choice! Please try again.\n";
