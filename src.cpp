@@ -417,7 +417,9 @@ int main()
                     cout << "3. Buy Entity\n";
                     cout << "4. Sell Entity\n";
                     cout << "5. Save Portfolio\n";
-                    cout << "6. Logout\n";
+                    cout << "6. Get Total Value of Portfolio\n";
+                    cout << "7. Search for Entity\n";
+                    cout << "8. Logout\n";
                     cout << "Enter your choice: ";
                     cin >> userChoice;
 
@@ -462,6 +464,23 @@ int main()
                         filehandler.savePortfolio(portfolio, currentUser); // Save the portfolio
                     }
                     else if (userChoice == 6)
+                    {
+                        cout << "Total Portfolio Value: $" << portfolio.getTotalValue() << "\n";
+                    }
+                    else if (userChoice == 7)
+                    {
+                        string name;
+                        cout << "Enter the name of the entity to search: ";
+                            cin >> name;
+                            {
+                                FinancialEntity *entity = portfolio.searchEntity(name);
+                                if (entity) 
+                                {
+                                    entity->showDetails();
+                                }
+                            }
+                    }
+                    else if (userChoice == 8)
                     {
                         break; // Logout
                     }
