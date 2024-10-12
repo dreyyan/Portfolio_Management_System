@@ -1,333 +1,409 @@
 #include <iostream>
-#include <vector>
 #include <memory>
-#include <algorithm>
 #include <string>
 #include <unordered_map>
+#include <map>
 
-#define fast std::ios::sync_with_stdio(false), std::cin.tie(NULL), std::cout.tie(NULL)
-#define ll long long
 using namespace std;
 
-class FinancialEntity
+class FinancialEntity 
 {
 protected:
     string name;
     double currentValue;
 
 public:
-    FinancialEntity(const string &name, double value)
-        : name(name), currentValue(value) {}
-
+    FinancialEntity(const string &name, double value) : name(name), currentValue(value) {}
     virtual ~FinancialEntity() = default;
 
-    virtual void showDetails() const = 0;
+    virtual void showDetails() const = 0; 
     virtual double getCurrentValue() const { return currentValue; }
     virtual string getName() const { return name; }
-    void setValue(double newValue)
+
+    void setValue(double newValue) 
     {
         currentValue = newValue;
     }
+
+    void addValue(double value) 
+    {
+        currentValue += value;
+    }
+
+    void subtractValue(double value) 
+    {
+        if (value <= currentValue)
+        {
+            currentValue -= value;
+        }
+        else{
+
+            cout << "Insufficient value to complete the transaction.\n";
+        }
+    }
+
 };
 
-class Asset : public FinancialEntity
+class Asset : public FinancialEntity 
 {
 public:
-    Asset(const string &name, double value)
-        : FinancialEntity(name, value) {}
+    Asset(const string &name, double value) : FinancialEntity(name, value) {}
 
-    void showDetails() const override
+    void showDetails() const override 
     {
         cout << "Asset Name: " << name << "\n"
              << "Current Value: $" << currentValue << "\n";
     }
+
 };
 
-class Liability : public FinancialEntity
+class Liability : public FinancialEntity 
 {
 public:
-    Liability(const string &name, double value)
-        : FinancialEntity(name, value) {}
+    Liability(const string &name, double value) : FinancialEntity(name, value) {}
 
-    void showDetails() const override
+    void showDetails() const override 
     {
         cout << "Liability Name: " << name << "\n"
              << "Current Value: $" << currentValue << "\n";
     }
+
 };
 
-class MutualFund
+class Equity : public FinancialEntity 
 {
-    string fundName;
-    vector<unique_ptr<FinancialEntity>> entities;
-
 public:
-    MutualFund(const string &name) : fundName(name) {}
+    Equity(const string &name, double value) : FinancialEntity(name, value) {}
 
-    void addEntity(unique_ptr<FinancialEntity> entity)
+    void showDetails() const override 
     {
-        entities.push_back(move(entity));
+        cout << "Equity Name: " << name << "\n"
+             << "Current Value: $" << currentValue << "\n";
     }
 
-    void showPortfolio() const
-    {
-        cout << "Mutual Fund: " << fundName << "\n";
-        for (const auto &entity : entities)
-        {
-            entity->showDetails();
-            cout << "--------------------\n";
-        }
-    }
-
-    double getTotalValue() const
-    {
-        double total = 0;
-        for (const auto &entity : entities)
-        {
-            total += entity->getCurrentValue();
-        }
-        return total;
-    }
-
-    void sortPortfolioByValue()
-    {
-        sort(entities.begin(), entities.end(), [](const unique_ptr<FinancialEntity> &a, const unique_ptr<FinancialEntity> &b)
-             { return a->getCurrentValue() > b->getCurrentValue(); });
-    }
-
-    FinancialEntity *findEntityByName(const string &entityName) const
-    {
-        auto it = find_if(entities.begin(), entities.end(), [&entityName](const unique_ptr<FinancialEntity> &entity)
-                          { return entity->getName() == entityName; });
-        return it != entities.end() ? it->get() : nullptr;
-    }
 };
 
-class User
+class Transaction 
 {
-    static int globalID;
-    int userID;
-    string username;
-    string password;
-    vector<MutualFund> userFunds;
-
 public:
-    User(const string &username, const string &password)
-        : username(username), password(password), userID(++globalID) {}
-
-    int getUserID() const
+    static void buy(FinancialEntity &entity, double amount) 
     {
-        return userID;
+        entity.addValue(amount);
+        cout << "Bought $" << amount << " of " << entity.getName() << ".\n";
     }
 
-    string getUsername() const
+    static void sell(FinancialEntity &entity, double amount) 
     {
-        return username;
+        entity.subtractValue(amount);
+        cout << "Sold $" << amount << " of " << entity.getName() << ".\n";
     }
 
-    bool authenticate(const string &pass) const
-    {
-        return password == pass;
-    }
-
-    void addMutualFund(const MutualFund &fund)
-    {
-        userFunds.push_back(fund);
-    }
-
-    void showUserPortfolio() const
-    {
-        cout << "User ID: " << userID << " | Username: " << username << "\n";
-        for (const auto &fund : userFunds)
-        {
-            fund.showPortfolio();
-        }
-    }
 };
 
-int User::globalID = 0;
-
-class PortfolioManagementSystem
+class PortfolioManager 
 {
-    unordered_map<int, User> users;
-    User *loggedInUser = nullptr;
+private:
+    map<string, unique_ptr<FinancialEntity>> entities;
 
 public:
-    void registerUser(const string &username, const string &password)
+    void addEntity(const string &name, double value, const string &type) 
     {
-        User newUser(username, password);
-        users[newUser.getUserID()] = newUser;
-        cout << "User registered with ID: " << newUser.getUserID() << "\n";
-    }
-
-    bool loginUser(const string &username, const string &password)
-    {
-        for (auto it = users.begin(); it != users.end(); ++it)
+        if (entities.find(name) != entities.end()) 
         {
-            if (it->second.getUsername() == username && it->second.authenticate(password))
+            entities[name]->addValue(value);
+        } 
+
+        else 
+        {
+            if (type == "Asset") 
             {
-                loggedInUser = &it->second;
-                cout << "Login successful! User ID: " << loggedInUser->getUserID() << "\n";
-                return true;
+                entities[name] = make_unique<Asset>(name, value);
+            } 
+
+            else if (type == "Liability") 
+            {
+                entities[name] = make_unique<Liability>(name, value);
+            } 
+
+            else if (type == "Equity") 
+            {
+                entities[name] = make_unique<Equity>(name, value);
+            } 
+
+            else 
+            {
+                cout << "Invalid financial entity type!\n";
+            }
+
+        }
+    }
+
+    void showPortfolio() const 
+    {
+        if (entities.empty()) 
+        {
+            cout << "No financial entities in the portfolio!\n";
+        } 
+
+        else 
+        {
+            for (const auto &pair : entities) 
+            {
+                pair.second->showDetails();
+                cout << "------------------------\n";
             }
         }
-        cout << "Login failed. Check your username and password.\n";
-        return false;
+
     }
 
-    void logoutUser()
+    FinancialEntity *searchEntity(const string &name) const 
     {
-        loggedInUser = nullptr;
-        cout << "Logged out successfully.\n";
-    }
+        auto it = entities.find(name);
 
-    User *getLoggedInUser() const
-    {
-        return loggedInUser;
-    }
-
-    void addUserMutualFund()
-    {
-        if (loggedInUser)
+        if (it != entities.end()) 
         {
-            string fundName;
-            cout << "Enter Mutual Fund name: ";
-            cin >> fundName;
+            return it->second.get();
+        } 
 
-            MutualFund fund(fundName);
-
-            char choice;
-            do
-            {
-                cout << "Add (A)sset or (L)iability or (Q)uit: ";
-                cin >> choice;
-
-                if (choice == 'A' || choice == 'L')
-                {
-                    string entityName;
-                    double value;
-                    cout << "Enter name: ";
-                    cin >> entityName;
-                    cout << "Enter value: ";
-                    cin >> value;
-
-                    if (choice == 'A')
-                    {
-                        fund.addEntity(make_unique<Asset>(entityName, value));
-                    }
-                    else
-                    {
-                        fund.addEntity(make_unique<Liability>(entityName, value));
-                    }
-                }
-            } while (choice != 'Q');
-
-            loggedInUser->addMutualFund(fund);
-            cout << "Mutual Fund added successfully.\n";
-        }
-        else
+        else 
         {
-            cout << "No user is logged in.\n";
+            cout << "Entity not found.\n";
+            return nullptr;
         }
+
+    }
+
+    double getTotalValue() const 
+    {
+        double totalValue = 0;
+
+        for (const auto &pair : entities) 
+        {
+            totalValue += pair.second->getCurrentValue();
+        }
+
+        return totalValue;
+    }
+
+    void buyEntity(const string &name, double amount) 
+    {
+        FinancialEntity *entity = searchEntity(name);
+
+        if (entity) 
+        {
+            Transaction::buy(*entity, amount);
+        }
+
+    }
+
+    void sellEntity(const string &name, double amount) 
+    {
+        FinancialEntity *entity = searchEntity(name);
+
+        if (entity) 
+        {
+            Transaction::sell(*entity, amount);
+        }
+
     }
 };
 
-class Transaction
+class User 
 {
+private:
+    unordered_map<string, string> users; 
+
+    string currentUsername;
+
+    unordered_map<string, PortfolioManager> userPortfolios; 
+
 public:
-    static void updateEntityValue(FinancialEntity &entity, double newValue)
+    void registerUser() 
     {
-        cout << "Updating " << entity.getName() << "'s value from $" << entity.getCurrentValue() << " to $" << newValue << "\n";
-        entity.setValue(newValue);
+        string username, password;
+        cout << "Enter a username: ";
+        cin >> username;
+
+        if (users.find(username) != users.end()) 
+        {
+            cout << "Username already exists. Please try again.\n";
+            return;
+        }
+
+        cout << "Enter a password: ";
+        cin >> password;
+
+        users[username] = password;
+        userPortfolios[username] = PortfolioManager(); 
+
+        cout << "User registered successfully!\n";
+
     }
 
-    static void applyTransaction(MutualFund &fund, const string &entityName, double newValue)
+    bool loginUser() 
     {
-        FinancialEntity *entity = fund.findEntityByName(entityName);
-        if (entity)
+        string username, password;
+        cout << "Enter username: ";
+        cin >> username;
+
+        cout << "Enter password: ";
+        cin >> password;
+
+        if (users.find(username) != users.end() && users[username] == password) 
         {
-            updateEntityValue(*entity, newValue);
-        }
-        else
+            currentUsername = username;
+            cout << "Login successful! Welcome, " << username << ".\n";
+            return true;
+        } 
+
+        else 
         {
-            cout << "Entity with name " << entityName << " not found in the mutual fund.\n";
+            cout << "Invalid username or password.\n";
+            return false;
         }
+
     }
+
+    PortfolioManager &getPortfolioManager() 
+    {
+        return userPortfolios[currentUsername];
+    }
+
 };
 
-
-int main()
+int main() 
 {
-    fast;
-    PortfolioManagementSystem pms;
+    User userSystem;
     int choice;
 
-    do
+    while (true) 
     {
-        cout << "\nPortfolio Management System Menu\n";
-        cout << "1. Register User\n";
-        cout << "2. Login User\n";
-        cout << "3. Add Mutual Fund to Portfolio\n";
-        cout << "4. View User Portfolio\n";
-        cout << "5. Logout\n";
-        cout << "6. Exit\n";
+        cout << "\n1. Register\n";
+        cout << "2. Login\n";
+        cout << "3. Exit\n";
         cout << "Enter your choice: ";
         cin >> choice;
 
-        switch (choice)
+        if (choice == 1) 
         {
-        case 1:
+            userSystem.registerUser();
+        } 
+
+        else if (choice == 2) 
         {
-            string username, password;
-            cout << "Enter username: ";
-            cin >> username;
-            cout << "Enter password: ";
-            cin >> password;
-            pms.registerUser(username, password);
-            break;
-        }
-        case 2:
-        {
-            string username, password;
-            cout << "Enter username: ";
-            cin >> username;
-            cout << "Enter password: ";
-            cin >> password;
-            pms.loginUser(username, password);
-            break;
-        }
-        case 3:
-        {
-            pms.addUserMutualFund();
-            break;
-        }
-        case 4:
-        {
-            User *user = pms.getLoggedInUser();
-            if (user)
+            if (userSystem.loginUser()) 
             {
-                user->showUserPortfolio();
+                PortfolioManager &portfolio = userSystem.getPortfolioManager();
+                int portfolioChoice;
+                while (true) 
+                {
+                    cout << "\n----- Portfolio Management -----\n";
+                    cout << "1. Add Asset\n";
+                    cout << "2. Add Liability\n";
+                    cout << "3. Add Equity\n";
+                    cout << "4. Display All Entities\n";
+                    cout << "5. Search for Entity\n";
+                    cout << "6. Get Total Value of Portfolio\n";
+                    cout << "7. Buy More of an Asset/Equity\n";
+                    cout << "8. Sell Asset/Equity\n";
+                    cout << "9. Logout\n";
+                    cout << "Enter your choice: ";
+                    cin >> portfolioChoice;
+
+                    if (portfolioChoice == 9) 
+                    {
+                        cout << "Logging out...\n";
+                        break;
+                    }
+
+                    // Portfolio actions similar to before
+                    string name;
+                    double value;
+                    switch (portfolioChoice) 
+                    {
+                        case 1:
+
+                            cout << "Enter Asset Name: ";
+                            cin >> name;
+                            cout << "Enter Asset Value: ";
+                            cin >> value;
+                            portfolio.addEntity(name, value, "Asset");
+                            break;
+
+                        case 2:
+
+                            cout << "Enter Liability Name: ";
+                            cin >> name;
+                            cout << "Enter Liability Value: ";
+                            cin >> value;
+                            portfolio.addEntity(name, value, "Liability");
+                            break;
+
+                        case 3:
+
+                            cout << "Enter Equity Name: ";
+                            cin >> name;
+                            cout << "Enter Equity Value: ";
+                            cin >> value;
+                            portfolio.addEntity(name, value, "Equity");
+                            break;
+
+                        case 4:
+
+                            portfolio.showPortfolio();
+                            break;
+
+                        case 5:
+
+                            cout << "Enter the name of the entity to search: ";
+                            cin >> name;
+                            portfolio.searchEntity(name);
+                            break;
+
+                        case 6:
+
+                            cout << "Total Portfolio Value: $" << portfolio.getTotalValue() << "\n";
+                            break;
+
+                        case 7:
+
+                            cout << "Enter the name of the Asset/Equity to buy more: ";
+                            cin >> name;
+                            cout << "Enter amount to buy: ";
+                            cin >> value;
+                            portfolio.buyEntity(name, value);
+                            break;
+
+                        case 8:
+
+                            cout << "Enter the name of the Asset/Equity to sell: ";
+                            cin >> name;
+                            cout << "Enter amount to sell: ";
+                            cin >> value;
+                            portfolio.sellEntity(name, value);
+                            break;
+
+                        default:
+
+                            cout << "Invalid choice. Please try again.\n";
+
+                    }
+                }
             }
-            else
-            {
-                cout << "No user is logged in.\n";
-            }
-            break;
-        }
-        case 5:
+        } 
+
+        else if (choice == 3) 
         {
-            pms.logoutUser();
+            cout << "Exiting system...\n";
             break;
-        }
-        case 6:
+        } 
+
+        else 
         {
-            cout << "Exiting...\n";
-            break;
-        }
-        default:
             cout << "Invalid choice! Please try again.\n";
         }
-    } while (choice != 6);
+        
+    }
 
     return 0;
 }
