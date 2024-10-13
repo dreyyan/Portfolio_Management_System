@@ -312,22 +312,35 @@ public:
 class User
 {
 private:
-    unordered_map<string, string> users;
-
     string currentUsername;
-
     unordered_map<string, PortfolioManager> userPortfolios;
 
 public:
-    // User Registration
+    // Check if a user exists in the file
+    bool userExists(const string &username)
+    {
+        ifstream file("users.txt");
+        string line, savedUsername;
+        while (getline(file, line))
+        {
+            stringstream ss(line);
+            getline(ss, savedUsername, ','); 
+            if (savedUsername == username)
+            {
+                return true; 
+            }
+        }
+        return false; 
+    }
 
+    // User Registration
     void registerUser()
     {
         string username, password;
         cout << "Enter a username: ";
         cin >> username;
 
-        if (users.find(username) != users.end())
+        if (userExists(username))
         {
             cout << "Username already exists. Please try again.\n";
             return;
@@ -336,10 +349,20 @@ public:
         cout << "Enter a password: ";
         cin >> password;
 
-        users[username] = password;
-        userPortfolios[username] = PortfolioManager();
+        // Save new user to the file
+        ofstream file("users.txt", ios::app); 
+        if (file.is_open())
+        {
+            file << username << "," << password << "\n"; 
+            file.close();
+            cout << "User registered successfully!\n";
+        }
+        else
+        {
+            cout << "Error: Could not open file for saving.\n";
+        }
 
-        cout << "User registered successfully!\n";
+        userPortfolios[username] = PortfolioManager();
     }
 
     // User Login
@@ -348,44 +371,53 @@ public:
         string username, password;
         cout << "Enter username: ";
         cin >> username;
-
         cout << "Enter password: ";
         cin >> password;
 
-        if (users.find(username) != users.end() && users[username] == password)
+        // Check if the username and password match any entry in users.txt
+        ifstream file("users.txt");
+        string line, savedUsername, savedPassword;
+        while (getline(file, line))
         {
-            currentUsername = username;
-            cout << "Login successful! Welcome, " << username << ".\n";
-            return true;
+            stringstream ss(line);
+            getline(ss, savedUsername, ','); // Username
+            getline(ss, savedPassword, ','); // Password
+
+            if (savedUsername == username && savedPassword == password)
+            {
+                currentUsername = username;
+                cout << "Login successful! Welcome, " << username << ".\n";
+                return true;
+            }
         }
 
-        else
-        {
-            cout << "Invalid username or password.\n";
-            return false;
-        }
+        // If no match found
+        cout << "Invalid username or password.\n";
+        return false;
     }
-    // Returns the Username of currently logged in user.
+
+    // Returns the username of the currently logged in user
     string getCurrentUsername() const
     {
         return currentUsername;
     }
 
+    // Access the portfolio manager of the logged in user
     PortfolioManager &getPortfolioManager()
     {
         return userPortfolios[currentUsername];
     }
-
 };
 
+// FileHandler class handles the portfolio files.
 class FileHandler
 {
 public:
     FinancialManager manager;
 
     // Function to save the portfolio to a file
-
-    void savePortfolio(const PortfolioManager &portfolio, const std::string &username)
+    
+    void savePortfolio(const PortfolioManager &portfolio, const string &username)
     {
         // Considering filename of format username_portfolio.txt
 
@@ -445,7 +477,7 @@ private:
 
         getline(ss, name, ',');
         getline(ss, valueStr, ',');
-        value = stod(valueStr); // Convert the value to a double
+        value = stod(valueStr);
         std::getline(ss, type, ',');
     }
 };
