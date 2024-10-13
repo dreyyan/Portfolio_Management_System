@@ -5,6 +5,9 @@
 #include <map>
 #include <fstream>
 #include <sstream>
+#include <vector>
+#include <algorithm>
+#include <stdexcept>
 
 using namespace std;
 
@@ -37,6 +40,7 @@ public:
         {
             currentValue -= value;
         }
+        
         else
         {
 
@@ -147,6 +151,7 @@ public:
                 {
                     cout << "Asset value cannot be negative!\n";
                     cout << "Shall I add in Liability instead? (y/n): ";
+
                     char choice;
                     cin >> choice;
                     
@@ -325,6 +330,7 @@ public:
         {
             stringstream ss(line);
             getline(ss, savedUsername, ','); 
+
             if (savedUsername == username)
             {
                 return true; 
@@ -357,6 +363,7 @@ public:
             file.close();
             cout << "User registered successfully!\n";
         }
+
         else
         {
             cout << "Error: Could not open file for saving.\n";
@@ -369,14 +376,17 @@ public:
     bool loginUser()
     {
         string username, password;
+
         cout << "Enter username: ";
         cin >> username;
+
         cout << "Enter password: ";
         cin >> password;
 
         // Check if the username and password match any entry in users.txt
         ifstream file("users.txt");
         string line, savedUsername, savedPassword;
+
         while (getline(file, line))
         {
             stringstream ss(line);
@@ -456,10 +466,12 @@ public:
         }
 
         std::string line;
+
         while (std::getline(file, line))
         {
             std::string name, type;
             double value;
+
             parseLine(line, name, value, type);
             portfolio.addEntity(name, value, type);
         }
@@ -477,139 +489,163 @@ private:
 
         getline(ss, name, ',');
         getline(ss, valueStr, ',');
+
         value = stod(valueStr);
         std::getline(ss, type, ',');
     }
 };
 
-int main()
-{
-    User userSystem;
-    FileHandler filehandler;
-    int choice;
+int main() {
+    try {
+        User userSystem;
+        FileHandler filehandler;
+        int choice;
 
-    while (true)
-    {
-        cout << "\n|1. Register\n";
-        cout << "|2. Login\n";
-        cout << "|3. Exit\n";
-        cout << "Enter your choice: ";
-        cin >> choice;
-
-        if (choice == 1)
+        while (true) 
         {
-            userSystem.registerUser();
-        }
+            cout << "\n|1. Register\n";
+            cout << "|2. Login\n";
+            cout << "|3. Exit\n";
+            cout << "Enter your choice: ";
+            cin >> choice;
 
-        else if (choice == 2)
-        {
-            if (userSystem.loginUser())
+            if (choice == 1) 
             {
-                string currentUser = userSystem.getCurrentUsername();
-                PortfolioManager &portfolio = userSystem.getPortfolioManager();
-                filehandler.loadPortfolio(portfolio, currentUser); // Load existing portfolio
+                userSystem.registerUser();
+            } 
 
-                int userChoice;
-                while (true)
+            else if (choice == 2) 
+            {
+                if (userSystem.loginUser()) 
                 {
-                    cout << "\nPortfolio Management Options:\n";
-                    cout << "|1. Add Entity\n";
-                    cout << "|2. Show Portfolio\n";
-                    cout << "|3. Buy Entity\n";
-                    cout << "|4. Sell Entity\n";
-                    cout << "|5. Save Portfolio\n";
-                    cout << "|6. Get Total Value of Portfolio\n";
-                    cout << "|7. Search for Entity\n";
-                    cout << "|8. Logout\n";
-                    cout << "Enter your choice: ";
-                    cin >> userChoice;
+                    string currentUser = userSystem.getCurrentUsername();
+                    PortfolioManager &portfolio = userSystem.getPortfolioManager();
+                    filehandler.loadPortfolio(portfolio, currentUser); // Load existing portfolio
 
-                    if (userChoice == 1)
+                    int userChoice;
+                    while (true) 
                     {
-                        string name, type;
-                        double value;
-                        cout << "Enter entity name: ";
-                        cin >> name;
-                        cout << "Enter entity type (Asset/Liability/Equity): ";
-                        cin >> type;
-                        cout << "Enter entity value: ";
-                        cin >> value;
-                        portfolio.addEntity(name, value, type);
-                    }
-                        
-                    else if (userChoice == 2)
-                    {
-                        portfolio.showPortfolio();
-                    }
-                        
-                    else if (userChoice == 3)
-                    {
-                        string name;
-                        double amount;
-                        cout << "Enter entity name to buy: ";
-                        cin >> name;
-                        cout << "Enter amount to buy: ";
-                        cin >> amount;
-                        portfolio.buyEntity(name, amount);
-                    }
-                        
-                    else if (userChoice == 4)
-                    {
-                        string name;
-                        double amount;
-                        cout << "Enter entity name to sell: ";
-                        cin >> name;
-                        cout << "Enter amount to sell: ";
-                        cin >> amount;
-                        portfolio.sellEntity(name, amount);
-                    }
-                        
-                    else if (userChoice == 5)
-                    {
-                        filehandler.savePortfolio(portfolio, currentUser); // Save the portfolio
-                    }
-                        
-                    else if (userChoice == 6)
-                    {
-                        cout << "Total Portfolio Value: ₹" << portfolio.getTotalValue() << "\n";
-                    }
-                        
-                    else if (userChoice == 7)
-                    {
-                        string name;
-                        cout << "Enter the name of the entity to search: ";
-                            cin >> name;
+                        cout << "\nPortfolio Management Options:\n";
+                        cout << "|1. Add Entity\n";
+                        cout << "|2. Show Portfolio\n";
+                        cout << "|3. Buy Entity\n";
+                        cout << "|4. Sell Entity\n";
+                        cout << "|5. Save Portfolio\n";
+                        cout << "|6. Get Total Value of Portfolio\n";
+                        cout << "|7. Search for Entity\n";
+                        cout << "|8. Logout\n";
+                        cout << "Enter your choice: ";
+                        cin >> userChoice;
+
+                        try {
+                            if (userChoice == 1) {
+                                string name, type;
+                                double value;
+
+                                cout << "Enter entity name: ";
+                                cin >> name;
+
+                                cout << "Enter entity type (Asset/Liability/Equity): ";
+                                cin >> type;
+
+                                cout << "Enter entity value: ";
+                                cin >> value;
+
+                                portfolio.addEntity(name, value, type);
+                            } 
+
+                            else if (userChoice == 2) 
                             {
+                                portfolio.showPortfolio();
+                            } 
+
+                            else if (userChoice == 3) 
+                            {
+                                string name;
+                                double amount;
+
+                                cout << "Enter entity name to buy: ";
+                                cin >> name;
+
+                                cout << "Enter amount to buy: ";
+                                cin >> amount;
+
+                                portfolio.buyEntity(name, amount);
+                            } 
+                            
+                            else if (userChoice == 4) 
+                            {
+                                string name;
+                                double amount;
+
+                                cout << "Enter entity name to sell: ";
+                                cin >> name;
+
+                                cout << "Enter amount to sell: ";
+                                cin >> amount;
+
+                                portfolio.sellEntity(name, amount);
+                            } 
+                            
+                            else if (userChoice == 5) 
+                            {
+                                filehandler.savePortfolio(portfolio, currentUser); // Save the portfolio
+                            } 
+                            
+                            else if (userChoice == 6) 
+                            {
+                                cout << "Total Portfolio Value: ₹" << portfolio.getTotalValue() << "\n";
+                            } 
+
+                            else if (userChoice == 7) 
+                            {
+                                string name;
+
+                                cout << "Enter the name of the entity to search: ";
+                                cin >> name;
+
                                 FinancialEntity *entity = portfolio.searchEntity(name);
-                                
+
                                 if (entity) 
                                 {
                                     entity->showDetails();
                                 }
+                            } 
+                            
+                            else if (userChoice == 8) 
+                            {
+                                break; // Logout
+                            } 
+
+                            else 
+                            {
+                                cout << "Invalid choice! Please try again.\n";
                             }
-                    }
+                        } 
                         
-                    else if (userChoice == 8)
-                    {
-                        break; // Logout
-                    }
-                        
-                    else
-                    {
-                        cout << "Invalid choice! Please try again.\n";
+                        catch (const exception &e)
+                        {
+                            cout << "An error occurred: " << e.what() << "\n";
+                        }
                     }
                 }
+            } 
+            
+            else if (choice == 3) 
+            {
+                break; // Exit
+            }
+
+            else 
+            {
+                cout << "Invalid choice! Please try again.\n";
             }
         }
-        else if (choice == 3)
-        {
-            break; // Exit
-        }
-            
-        else
-        {
-            cout << "Invalid choice! Please try again.\n";
-        }
+    } 
+
+    catch (const exception &e) 
+    {
+        cout << "An unexpected error occurred: " << e.what() << "\n";
     }
 
     return 0;
