@@ -59,7 +59,7 @@ public:
     void showDetails() const override
     {
         cout << "Asset Name: " << name << "\n"
-             << "Current Value: $" << currentValue << "\n";
+             << "Current Value: ₹" << currentValue << "\n";
     }
 
     std::string getType() const override { return "Asset"; }
@@ -75,7 +75,7 @@ public:
     void showDetails() const override
     {
         cout << "Liability Name: " << name << "\n"
-             << "Current Value: $" << currentValue << "\n";
+             << "Current Value: ₹" << currentValue << "\n";
     }
 
     std::string getType() const override { return "Liability"; }
@@ -91,7 +91,7 @@ public:
     void showDetails() const override
     {
         cout << "Equity Name: " << name << "\n"
-             << "Current Value: $" << currentValue << "\n";
+             << "Current Value: ₹" << currentValue << "\n";
     }
     std::string getType() const override { return "Equity"; }
 };
@@ -114,13 +114,13 @@ public:
     static void buy(FinancialEntity &entity, double amount)
     {
         entity.addValue(amount);
-        cout << "Bought $" << amount << " of " << entity.getName() << ".\n";
+        cout << "Bought ₹" << amount << " of " << entity.getName() << ".\n";
     }
 
     static void sell(FinancialEntity &entity, double amount)
     {
         entity.subtractValue(amount);
-        cout << "Sold $" << amount << " of " << entity.getName() << ".\n";
+        cout << "Sold ₹" << amount << " of " << entity.getName() << ".\n";
     }
 };
 
@@ -490,9 +490,9 @@ int main()
 
     while (true)
     {
-        cout << "\n1. Register\n";
-        cout << "2. Login\n";
-        cout << "3. Exit\n";
+        cout << "\n|1. Register\n";
+        cout << "|2. Login\n";
+        cout << "|3. Exit\n";
         cout << "Enter your choice: ";
         cin >> choice;
 
@@ -513,14 +513,14 @@ int main()
                 while (true)
                 {
                     cout << "\nPortfolio Management Options:\n";
-                    cout << "1. Add Entity\n";
-                    cout << "2. Show Portfolio\n";
-                    cout << "3. Buy Entity\n";
-                    cout << "4. Sell Entity\n";
-                    cout << "5. Save Portfolio\n";
-                    cout << "6. Get Total Value of Portfolio\n";
-                    cout << "7. Search for Entity\n";
-                    cout << "8. Logout\n";
+                    cout << "|1. Add Entity\n";
+                    cout << "|2. Show Portfolio\n";
+                    cout << "|3. Buy Entity\n";
+                    cout << "|4. Sell Entity\n";
+                    cout << "|5. Save Portfolio\n";
+                    cout << "|6. Get Total Value of Portfolio\n";
+                    cout << "|7. Search for Entity\n";
+                    cout << "|8. Logout\n";
                     cout << "Enter your choice: ";
                     cin >> userChoice;
 
@@ -571,7 +571,7 @@ int main()
                         
                     else if (userChoice == 6)
                     {
-                        cout << "Total Portfolio Value: $" << portfolio.getTotalValue() << "\n";
+                        cout << "Total Portfolio Value: ₹" << portfolio.getTotalValue() << "\n";
                     }
                         
                     else if (userChoice == 7)
