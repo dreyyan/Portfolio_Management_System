@@ -8,6 +8,9 @@
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
+#include <iomanip>
+#include <ctime>
+#include <cmath>
 
 using namespace std;
 
@@ -40,7 +43,7 @@ public:
         {
             currentValue -= value;
         }
-        
+
         else
         {
 
@@ -50,7 +53,6 @@ public:
     // Helper function to determine the type of the entity (Asset, Liability, Equity)
     virtual std::string getType() const = 0;
     virtual ~FinancialEntity() = default;
-
 };
 
 // Asset Class
@@ -114,7 +116,21 @@ public:
 class Transaction
 {
 public:
+    string asset;
+    double amount;
+    string type;
+    time_t date;
 
+    Transaction(const string &assetName, double transactionAmount, const string &transactionType)
+        : asset(assetName), amount(transactionAmount), type(transactionType), date(time(nullptr)) {}
+
+    string getDateString() const
+    {
+        char buffer[20];
+        struct tm *tm_info = localtime(&date);
+        strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", tm_info);
+        return buffer;
+    }
     static void buy(FinancialEntity &entity, double amount)
     {
         entity.addValue(amount);
@@ -147,25 +163,25 @@ public:
         {
             if (type == "Asset")
             {
-                if(value < 0)
+                if (value < 0)
                 {
                     cout << "Asset value cannot be negative!\n";
                     cout << "Shall I add in Liability instead? (y/n): ";
 
                     char choice;
                     cin >> choice;
-                    
-                    if(choice == 'y'|| choice == 'Y')
+
+                    if (choice == 'y' || choice == 'Y')
                     {
                         entities[name] = make_unique<Liability>(name, value);
                     }
-                        
+
                     else
                     {
-                        entities[name] = make_unique<Asset>(name, -1*value);
+                        entities[name] = make_unique<Asset>(name, -1 * value);
                     }
                 }
-                    
+
                 else
                 {
                     entities[name] = make_unique<Asset>(name, value);
@@ -174,24 +190,24 @@ public:
 
             else if (type == "Liability")
             {
-                if(value > 0)
+                if (value > 0)
                 {
                     cout << "Liability value cannot be positive!\n";
                     cout << "Shall I add in Asset instead? (y/n): ";
                     char choice;
                     cin >> choice;
-                    
-                    if(choice == 'y'|| choice == 'Y')
+
+                    if (choice == 'y' || choice == 'Y')
                     {
                         entities[name] = make_unique<Asset>(name, value);
                     }
-                        
+
                     else
                     {
-                        entities[name] = make_unique<Liability>(name, -1*value);
+                        entities[name] = make_unique<Liability>(name, -1 * value);
                     }
                 }
-                    
+
                 else
                 {
                     entities[name] = make_unique<Liability>(name, value);
@@ -200,24 +216,24 @@ public:
 
             else if (type == "Equity")
             {
-                if(value < 0)
+                if (value < 0)
                 {
                     cout << "Equity value cannot be negative!\n";
                     cout << "Shall I add in Liability instead? (y/n): ";
                     char choice;
                     cin >> choice;
-                    
-                    if(choice == 'y'|| choice == 'Y')
+
+                    if (choice == 'y' || choice == 'Y')
                     {
                         entities[name] = make_unique<Liability>(name, value);
                     }
-                        
+
                     else
                     {
-                        entities[name] = make_unique<Equity>(name, -1*value);
+                        entities[name] = make_unique<Equity>(name, -1 * value);
                     }
                 }
-                    
+
                 else
                 {
                     entities[name] = make_unique<Equity>(name, value);
@@ -329,14 +345,14 @@ public:
         while (getline(file, line))
         {
             stringstream ss(line);
-            getline(ss, savedUsername, ','); 
+            getline(ss, savedUsername, ',');
 
             if (savedUsername == username)
             {
-                return true; 
+                return true;
             }
         }
-        return false; 
+        return false;
     }
 
     // User Registration
@@ -356,10 +372,10 @@ public:
         cin >> password;
 
         // Save new user to the file
-        ofstream file("users.txt", ios::app); 
+        ofstream file("users.txt", ios::app);
         if (file.is_open())
         {
-            file << username << "," << password << "\n"; 
+            file << username << "," << password << "\n";
             file.close();
             cout << "User registered successfully!\n";
         }
@@ -426,7 +442,7 @@ public:
     FinancialManager manager;
 
     // Function to save the portfolio to a file
-    
+
     void savePortfolio(const PortfolioManager &portfolio, const string &username)
     {
         // Considering filename of format username_portfolio.txt
@@ -495,13 +511,231 @@ private:
     }
 };
 
-int main() {
-    try {
+
+class PortfolioAnalytics
+{
+public:
+    // Function to calculate total assets value
+    double totalAssets(const PortfolioManager &portfolio) const
+    {
+        double total = 0;
+        for (const auto &entityPair : portfolio.getEntities())
+        {
+            if (entityPair.second->getType() == "Asset")
+            {
+                total += entityPair.second->getCurrentValue();
+            }
+        }
+        return total;
+    }
+
+    // Function to calculate total liabilities value
+    double totalLiabilities(const PortfolioManager &portfolio) const
+    {
+        double total = 0;
+        for (const auto &entityPair : portfolio.getEntities())
+        {
+            if (entityPair.second->getType() == "Liability")
+            {
+                total += entityPair.second->getCurrentValue();
+            }
+        }
+        return total;
+    }
+
+    // Function to calculate total equities value
+    double totalEquities(const PortfolioManager &portfolio) const
+    {
+        double total = 0;
+        for (const auto &entityPair : portfolio.getEntities())
+        {
+            if (entityPair.second->getType() == "Equity")
+            {
+                total += entityPair.second->getCurrentValue();
+            }
+        }
+        return total;
+    }
+
+    // Function to generate a summary report
+    void showReport(const PortfolioManager &portfolio) const
+    {
+        double assets = totalAssets(portfolio);
+        double liabilities = totalLiabilities(portfolio);
+        double equities = totalEquities(portfolio);
+        double netValue = assets + equities - liabilities;
+
+        cout << "\n--- Portfolio Summary Report ---\n";
+        cout << "Total Assets: ₹" << assets << "\n";
+        cout << "Total Liabilities: ₹" << liabilities << "\n";
+        cout << "Total Equities: ₹" << equities << "\n";
+        cout << "Net Portfolio Value: ₹" << netValue << "\n";
+        cout << "---------------------------------\n";
+    }
+
+    // Function to show distribution of entities by type
+    void entityDistribution(const PortfolioManager &portfolio) const
+    {
+        map<string, int> distribution;
+
+        for (const auto &entityPair : portfolio.getEntities())
+        {
+            string type = entityPair.second->getType();
+            distribution[type]++;
+        }
+
+        cout << "\n--- Portfolio Entity Distribution ---\n";
+        for (const auto &entry : distribution)
+        {
+            cout << entry.first << ": " << entry.second << "\n";
+        }
+        cout << "------------------------------------\n";
+    }
+};
+
+class TransactionHistory
+{
+private:
+    vector<Transaction> transactions; // Stores all transactions
+
+public:
+    // Add a transaction
+    void add(const string &asset, double amount, const string &type)
+    {
+        transactions.emplace_back(asset, amount, type);
+    }
+
+    // Display all transactions
+    void show() const
+    {
+        cout << "\n--- Transaction History ---\n";
+        for (const auto &tran : transactions)
+        {
+            cout << "Asset: " << tran.asset << ", Amount: ₹" << tran.amount
+                 << ", Type: " << tran.type << ", Date: " << tran.getDateString() << endl;
+        }
+        cout << "----------------------------\n";
+    }
+
+    // Search transactions by asset
+    void search(const string &asset) const
+    {
+        cout << "\n--- Transactions for Asset: " << asset << " ---\n";
+        bool found = false;
+        for (const auto &tran : transactions)
+        {
+            if (tran.asset == asset)
+            {
+                cout << "Asset: " << tran.asset << ", Amount: ₹" << tran.amount
+                     << ", Type: " << tran.type << ", Date: " << tran.getDateString() << endl;
+                found = true;
+            }
+        }
+        if (!found)
+            cout << "No transactions found for asset: " << asset << endl;
+        cout << "----------------------------\n";
+    }
+
+    // Filter transactions by type
+    void filter(const string &type) const
+    {
+        cout << "\n--- Transactions of Type: " << type << " ---\n";
+        bool found = false;
+        for (const auto &tran : transactions)
+        {
+            if (tran.type == type)
+            {
+                cout << "Asset: " << tran.asset << ", Amount: ₹" << tran.amount
+                     << ", Date: " << tran.getDateString() << endl;
+                found = true;
+            }
+        }
+        if (!found)
+            cout << "No transactions found of type: " << type << endl;
+        cout << "----------------------------\n";
+    }
+};
+
+class Watchlist
+{
+public:
+    struct WatchlistAsset
+    {
+        string name;
+        double current_price;
+        double initial_price;
+    };
+
+    void add_asset(const string &asset_name, double initial_price)
+    {
+        watchlist.push_back({asset_name, initial_price, initial_price});
+        cout << "Added " << asset_name << " to the watchlist.\n";
+    }
+
+    void remove_asset(const string &asset_name)
+    {
+        for (size_t i = 0; i < watchlist.size(); ++i)
+        {
+            if (watchlist[i].name == asset_name)
+            {
+                watchlist.erase(watchlist.begin() + i);
+                cout << "Removed " << asset_name << " from the watchlist.\n";
+                return;
+            }
+        }
+        cout << "Asset " << asset_name << " not found in the watchlist.\n";
+    }
+
+    void track_performance() const
+    {
+        for (const auto &asset : watchlist)
+        {
+            double change = ((asset.current_price - asset.initial_price) / asset.initial_price) * 100;
+            cout << "Asset: " << asset.name << ", Price Change: " << change << "%\n";
+        }
+    }
+
+    void notify_significant_changes(double threshold) const
+    {
+        for (const auto &asset : watchlist)
+        {
+            double change = ((asset.current_price - asset.initial_price) / asset.initial_price) * 100;
+            if (abs(change) >= threshold)
+            {
+                cout << "Significant change in " << asset.name << ": " << change << "%\n";
+            }
+        }
+    }
+
+    void update_price(const string &asset_name, double new_price)
+    {
+        for (auto &asset : watchlist)
+        {
+            if (asset.name == asset_name)
+            {
+                asset.current_price = new_price;
+                cout << "Updated price of " << asset_name << " to " << new_price << ".\n";
+                return;
+            }
+        }
+        cout << "Asset " << asset_name << " not found in the watchlist.\n";
+    }
+
+private:
+    vector<WatchlistAsset> watchlist;
+};
+
+int main()
+{
+    try
+    {
         User userSystem;
         FileHandler filehandler;
+        PortfolioAnalytics portfolioAnalytics;
+        Watchlist myWatchlist;
         int choice;
 
-        while (true) 
+        while (true)
         {
             cout << "\n|1. Register\n";
             cout << "|2. Login\n";
@@ -509,21 +743,21 @@ int main() {
             cout << "Enter your choice: ";
             cin >> choice;
 
-            if (choice == 1) 
+            if (choice == 1)
             {
                 userSystem.registerUser();
-            } 
+            }
 
-            else if (choice == 2) 
+            else if (choice == 2)
             {
-                if (userSystem.loginUser()) 
+                if (userSystem.loginUser())
                 {
                     string currentUser = userSystem.getCurrentUsername();
                     PortfolioManager &portfolio = userSystem.getPortfolioManager();
-                    filehandler.loadPortfolio(portfolio, currentUser); // Load existing portfolio
+                    filehandler.loadPortfolio(portfolio, currentUser);
 
                     int userChoice;
-                    while (true) 
+                    while (true)
                     {
                         cout << "\nPortfolio Management Options:\n";
                         cout << "|1. Add Entity\n";
@@ -533,12 +767,17 @@ int main() {
                         cout << "|5. Save Portfolio\n";
                         cout << "|6. Get Total Value of Portfolio\n";
                         cout << "|7. Search for Entity\n";
-                        cout << "|8. Logout\n";
+                        cout << "|8. Generate Portfolio Report\n";
+                        cout << "|9. Show Entity Distribution\n";
+                        cout << "|10. Manage Watchlist\n";
+                        cout << "|11. Logout\n";
                         cout << "Enter your choice: ";
                         cin >> userChoice;
 
-                        try {
-                            if (userChoice == 1) {
+                        try
+                        {
+                            if (userChoice == 1)
+                            {
                                 string name, type;
                                 double value;
 
@@ -552,14 +791,14 @@ int main() {
                                 cin >> value;
 
                                 portfolio.addEntity(name, value, type);
-                            } 
+                            }
 
-                            else if (userChoice == 2) 
+                            else if (userChoice == 2)
                             {
                                 portfolio.showPortfolio();
-                            } 
+                            }
 
-                            else if (userChoice == 3) 
+                            else if (userChoice == 3)
                             {
                                 string name;
                                 double amount;
@@ -571,9 +810,9 @@ int main() {
                                 cin >> amount;
 
                                 portfolio.buyEntity(name, amount);
-                            } 
-                            
-                            else if (userChoice == 4) 
+                            }
+
+                            else if (userChoice == 4)
                             {
                                 string name;
                                 double amount;
@@ -585,19 +824,19 @@ int main() {
                                 cin >> amount;
 
                                 portfolio.sellEntity(name, amount);
-                            } 
-                            
-                            else if (userChoice == 5) 
+                            }
+
+                            else if (userChoice == 5)
                             {
-                                filehandler.savePortfolio(portfolio, currentUser); // Save the portfolio
-                            } 
-                            
-                            else if (userChoice == 6) 
+                                filehandler.savePortfolio(portfolio, currentUser);
+                            }
+
+                            else if (userChoice == 6)
                             {
                                 cout << "Total Portfolio Value: ₹" << portfolio.getTotalValue() << "\n";
-                            } 
+                            }
 
-                            else if (userChoice == 7) 
+                            else if (userChoice == 7)
                             {
                                 string name;
 
@@ -606,44 +845,105 @@ int main() {
 
                                 FinancialEntity *entity = portfolio.searchEntity(name);
 
-                                if (entity) 
+                                if (entity)
                                 {
                                     entity->showDetails();
                                 }
-                            } 
-                            
-                            else if (userChoice == 8) 
+                            }
+
+                            else if (userChoice == 8)
+                            {
+                                portfolioAnalytics.showReport(portfolio);
+                            }
+
+                            else if (userChoice == 9)
+                            {
+                                portfolioAnalytics.entityDistribution(portfolio); // Show distribution
+                            }
+
+                            else if (userChoice == 10) // Watchlist management
+                            {
+                                int watchlistChoice;
+                                cout << "\nWatchlist Options:\n";
+                                cout << "|1. Add Asset to Watchlist\n";
+                                cout << "|2. Remove Asset from Watchlist\n";
+                                cout << "|3. Update Asset Price in Watchlist\n";
+                                cout << "|4. View Watchlist Performance\n";
+                                cout << "|5. Notify Significant Changes in Watchlist\n";
+                                cout << "Enter your choice: ";
+                                cin >> watchlistChoice;
+
+                                if (watchlistChoice == 1)
+                                {
+                                    string assetName;
+                                    double initialPrice;
+                                    cout << "Enter asset name: ";
+                                    cin >> assetName;
+                                    cout << "Enter initial price: ";
+                                    cin >> initialPrice;
+                                    myWatchlist.add_asset(assetName, initialPrice);
+                                }
+                                else if (watchlistChoice == 2)
+                                {
+                                    string assetName;
+                                    cout << "Enter asset name to remove: ";
+                                    cin >> assetName;
+                                    myWatchlist.remove_asset(assetName);
+                                }
+                                else if (watchlistChoice == 3)
+                                {
+                                    string assetName;
+                                    double newPrice;
+                                    cout << "Enter asset name: ";
+                                    cin >> assetName;
+                                    cout << "Enter new price: ";
+                                    cin >> newPrice;
+                                    myWatchlist.update_price(assetName, newPrice);
+                                }
+                                else if (watchlistChoice == 4)
+                                {
+                                    myWatchlist.track_performance();
+                                }
+                                else if (watchlistChoice == 5)
+                                {
+                                    double threshold;
+                                    cout << "Enter price change threshold (percentage): ";
+                                    cin >> threshold;
+                                    myWatchlist.notify_significant_changes(threshold);
+                                }
+                            }
+
+                            else if (userChoice == 11) // Logout
                             {
                                 break; // Logout
-                            } 
-
-                            else 
+                            }
+                            else
                             {
                                 cout << "Invalid choice! Please try again.\n";
                             }
-                        } 
-                        
+                        }
+
                         catch (const exception &e)
                         {
                             cout << "An error occurred: " << e.what() << "\n";
                         }
                     }
                 }
-            } 
-            
-            else if (choice == 3) 
+            }
+
+            else if (choice == 3)
             {
                 break; // Exit
             }
 
-            else 
+            else
             {
                 cout << "Invalid choice! Please try again.\n";
             }
         }
-    } 
+    }
 
-    catch (const exception &e) 
+    catch (const exception &e)
     {
         cout << "An unexpected error occurred: " << e.what() << "\n";
     }
