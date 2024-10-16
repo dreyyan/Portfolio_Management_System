@@ -65,7 +65,7 @@ public:
     void showDetails() const override
     {
         cout << "Asset Name: " << name << "\n"
-             << "Current Value: ₹" << currentValue << "\n";
+             << "Current Value: $" << currentValue << "\n";
     }
 
     std::string getType() const override { return "Asset"; }
@@ -81,7 +81,7 @@ public:
     void showDetails() const override
     {
         cout << "Liability Name: " << name << "\n"
-             << "Current Value: ₹" << currentValue << "\n";
+             << "Current Value: $" << currentValue << "\n";
     }
 
     std::string getType() const override { return "Liability"; }
@@ -97,7 +97,7 @@ public:
     void showDetails() const override
     {
         cout << "Equity Name: " << name << "\n"
-             << "Current Value: ₹" << currentValue << "\n";
+             << "Current Value: $" << currentValue << "\n";
     }
     std::string getType() const override { return "Equity"; }
 };
@@ -134,13 +134,13 @@ public:
     static void buy(FinancialEntity &entity, double amount)
     {
         entity.addValue(amount);
-        cout << "Bought ₹" << amount << " of " << entity.getName() << ".\n";
+        cout << "Bought $" << amount << " of " << entity.getName() << ".\n";
     }
 
     static void sell(FinancialEntity &entity, double amount)
     {
         entity.subtractValue(amount);
-        cout << "Sold ₹" << amount << " of " << entity.getName() << ".\n";
+        cout << "Sold $" << amount << " of " << entity.getName() << ".\n";
     }
 };
 
@@ -493,7 +493,7 @@ public:
         }
 
         file.close();
-        std::cout << "Portfolio loaded from " << filename << "\n";
+        cout << "Portfolio loaded from " << filename << "\n";
     }
 
 private:
@@ -507,7 +507,7 @@ private:
         getline(ss, valueStr, ',');
 
         value = stod(valueStr);
-        std::getline(ss, type, ',');
+        getline(ss, type, ',');
     }
 };
 
@@ -566,10 +566,10 @@ public:
         double netValue = assets + equities - liabilities;
 
         cout << "\n--- Portfolio Summary Report ---\n";
-        cout << "Total Assets: ₹" << assets << "\n";
-        cout << "Total Liabilities: ₹" << liabilities << "\n";
-        cout << "Total Equities: ₹" << equities << "\n";
-        cout << "Net Portfolio Value: ₹" << netValue << "\n";
+        cout << "Total Assets: $" << assets << "\n";
+        cout << "Total Liabilities: $" << liabilities << "\n";
+        cout << "Total Equities: $" << equities << "\n";
+        cout << "Net Portfolio Value: $" << netValue << "\n";
         cout << "---------------------------------\n";
     }
 
@@ -611,7 +611,7 @@ public:
         cout << "\n--- Transaction History ---\n";
         for (const auto &tran : transactions)
         {
-            cout << "Asset: " << tran.asset << ", Amount: ₹" << tran.amount
+            cout << "Asset: " << tran.asset << ", Amount: $" << tran.amount
                  << ", Type: " << tran.type << ", Date: " << tran.getDateString() << endl;
         }
         cout << "----------------------------\n";
@@ -626,7 +626,7 @@ public:
         {
             if (tran.asset == asset)
             {
-                cout << "Asset: " << tran.asset << ", Amount: ₹" << tran.amount
+                cout << "Asset: " << tran.asset << ", Amount: $" << tran.amount
                      << ", Type: " << tran.type << ", Date: " << tran.getDateString() << endl;
                 found = true;
             }
@@ -645,7 +645,7 @@ public:
         {
             if (tran.type == type)
             {
-                cout << "Asset: " << tran.asset << ", Amount: ₹" << tran.amount
+                cout << "Asset: " << tran.asset << ", Amount: $" << tran.amount
                      << ", Date: " << tran.getDateString() << endl;
                 found = true;
             }
@@ -656,73 +656,141 @@ public:
     }
 };
 
-class Watchlist
-{
+class Watchlist {
 public:
-    struct WatchlistAsset
-    {
-        string name;
-        double current_price;
-        double initial_price;
-    };
 
-    void add_asset(const string &asset_name, double initial_price)
-    {
-        watchlist.push_back({asset_name, initial_price, initial_price});
+    void add_asset(const string &username, const string &asset_name, double initial_price) {
+        ofstream file(username + "_watchlist.txt", ios::app);
+        if (!file.is_open()) {
+            cout << "Error opening watchlist file!\n";
+            return;
+        }
+
+        file << asset_name << "," << initial_price << "," << initial_price << "\n";
+        file.close();
         cout << "Added " << asset_name << " to the watchlist.\n";
     }
 
-    void remove_asset(const string &asset_name)
-    {
-        for (size_t i = 0; i < watchlist.size(); ++i)
-        {
-            if (watchlist[i].name == asset_name)
-            {
-                watchlist.erase(watchlist.begin() + i);
-                cout << "Removed " << asset_name << " from the watchlist.\n";
-                return;
+    void remove_asset(const string &username, const string &asset_name) {
+        ifstream infile(username + "_watchlist.txt");
+        ofstream tempFile("temp.txt");
+
+        if (!infile.is_open() || !tempFile.is_open()) {
+            cout << "Error opening files for removing asset!\n";
+            return;
+        }
+
+        string line;
+        bool asset_found = false;
+        while (getline(infile, line)) {
+            stringstream ss(line);
+            string name;
+            getline(ss, name, ',');
+            if (name != asset_name) {
+                tempFile << line << "\n";
+            } else {
+                asset_found = true;
             }
         }
-        cout << "Asset " << asset_name << " not found in the watchlist.\n";
-    }
 
-    void track_performance() const
-    {
-        for (const auto &asset : watchlist)
-        {
-            double change = ((asset.current_price - asset.initial_price) / asset.initial_price) * 100;
-            cout << "Asset: " << asset.name << ", Price Change: " << change << "%\n";
+        infile.close();
+        tempFile.close();
+        remove((username + "_watchlist.txt").c_str());
+        rename("temp.txt", (username + "_watchlist.txt").c_str());
+
+        if (asset_found) {
+            cout << "Removed " << asset_name << " from the watchlist.\n";
+        } else {
+            cout << "Asset " << asset_name << " not found in the watchlist.\n";
         }
     }
 
-    void notify_significant_changes(double threshold) const
-    {
-        for (const auto &asset : watchlist)
-        {
-            double change = ((asset.current_price - asset.initial_price) / asset.initial_price) * 100;
-            if (abs(change) >= threshold)
-            {
-                cout << "Significant change in " << asset.name << ": " << change << "%\n";
+    void track_performance(const string &username) const {
+        ifstream file(username + "_watchlist.txt");
+        if (!file.is_open()) {
+            cout << "Error opening watchlist file for tracking performance!\n";
+            return;
+        }
+
+        string line;
+        while (getline(file, line)) {
+            stringstream ss(line);
+            string name;
+            double initial_price, current_price;
+            getline(ss, name, ',');
+            ss >> initial_price;
+            ss.ignore(1, ',');
+            ss >> current_price;
+
+            double change = ((current_price - initial_price) / initial_price) * 100;
+            cout << "Asset: " << name << ", Price Change: " << change << "%\n";
+        }
+        file.close();
+    }
+
+    void notify_significant_changes(const string &username, double threshold) const {
+        ifstream file(username + "_watchlist.txt");
+        if (!file.is_open()) {
+            cout << "Error opening watchlist file for notifications!\n";
+            return;
+        }
+
+        string line;
+        while (getline(file, line)) {
+            stringstream ss(line);
+            string name;
+            double initial_price, current_price;
+            getline(ss, name, ',');
+            ss >> initial_price;
+            ss.ignore(1, ',');
+            ss >> current_price;
+
+            double change = ((current_price - initial_price) / initial_price) * 100;
+            if (abs(change) >= threshold) {
+                cout << "Significant change in " << name << ": " << change << "%\n";
             }
         }
+        file.close();
     }
 
-    void update_price(const string &asset_name, double new_price)
-    {
-        for (auto &asset : watchlist)
-        {
-            if (asset.name == asset_name)
-            {
-                asset.current_price = new_price;
-                cout << "Updated price of " << asset_name << " to " << new_price << ".\n";
-                return;
-            }
+    void update_price(const string &username, const string &asset_name, double new_price) {
+        ifstream infile(username + "_watchlist.txt");
+        ofstream tempFile("temp.txt");
+
+        if (!infile.is_open() || !tempFile.is_open()) {
+            cout << "Error opening files for updating price!\n";
+            return;
         }
-        cout << "Asset " << asset_name << " not found in the watchlist.\n";
-    }
 
-private:
-    vector<WatchlistAsset> watchlist;
+        string line;
+        bool asset_found = false;
+        while (getline(infile, line)) {
+            stringstream ss(line);
+            string name;
+            double initial_price, current_price;
+            getline(ss, name, ',');
+            ss >> initial_price;
+            ss.ignore(1, ',');
+            ss >> current_price;
+
+            if (name == asset_name) {
+                current_price = new_price;
+                asset_found = true;
+            }
+            tempFile << name << "," << initial_price << "," << current_price << "\n";
+        }
+
+        infile.close();
+        tempFile.close();
+        remove((username + "_watchlist.txt").c_str());
+        rename("temp.txt", (username + "_watchlist.txt").c_str());
+
+        if (asset_found) {
+            cout << "Updated price of " << asset_name << " to " << new_price << ".\n";
+        } else {
+            cout << "Asset " << asset_name << " not found in the watchlist.\n";
+        }
+    }
 };
 
 int main()
@@ -730,6 +798,7 @@ int main()
     try
     {
         User userSystem;
+        Watchlist watchlist;
         FileHandler filehandler;
         PortfolioAnalytics portfolioAnalytics;
         Watchlist myWatchlist;
@@ -833,7 +902,7 @@ int main()
 
                             else if (userChoice == 6)
                             {
-                                cout << "Total Portfolio Value: ₹" << portfolio.getTotalValue() << "\n";
+                                cout << "Total Portfolio Value: $" << portfolio.getTotalValue() << "\n";
                             }
 
                             else if (userChoice == 7)
@@ -881,14 +950,14 @@ int main()
                                     cin >> assetName;
                                     cout << "Enter initial price: ";
                                     cin >> initialPrice;
-                                    myWatchlist.add_asset(assetName, initialPrice);
+                                    myWatchlist.add_asset(currentUser,assetName,initialPrice);
                                 }
                                 else if (watchlistChoice == 2)
                                 {
                                     string assetName;
                                     cout << "Enter asset name to remove: ";
                                     cin >> assetName;
-                                    myWatchlist.remove_asset(assetName);
+                                    myWatchlist.remove_asset(currentUser,assetName);
                                 }
                                 else if (watchlistChoice == 3)
                                 {
@@ -898,22 +967,25 @@ int main()
                                     cin >> assetName;
                                     cout << "Enter new price: ";
                                     cin >> newPrice;
-                                    myWatchlist.update_price(assetName, newPrice);
+                                    myWatchlist.update_price(currentUser,assetName,newPrice);
                                 }
                                 else if (watchlistChoice == 4)
                                 {
-                                    myWatchlist.track_performance();
+                                    myWatchlist.track_performance(currentUser);
                                 }
                                 else if (watchlistChoice == 5)
                                 {
                                     double threshold;
                                     cout << "Enter price change threshold (percentage): ";
                                     cin >> threshold;
-                                    myWatchlist.notify_significant_changes(threshold);
+                                    myWatchlist.notify_significant_changes(currentUser,threshold);
+                                }
+                                else{
+                                    cout << "Invalid Input";
                                 }
                             }
 
-                            else if (userChoice == 11) // Logout
+                            else if(userChoice == 11) // Logout
                             {
                                 break; // Logout
                             }
