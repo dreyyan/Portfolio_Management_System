@@ -124,17 +124,11 @@ public:
     Transaction(const string &assetName, double transactionAmount, const string &transactionType)
         : asset(assetName), amount(transactionAmount), type(transactionType), date(time(nullptr)) {}
 
-    string getDateString() const
-    {
-        char buffer[20];
-        struct tm *tm_info = localtime(&date);
-        strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", tm_info);
-        return buffer;
-    }
     static void buy(FinancialEntity &entity, double amount)
     {
         entity.addValue(amount);
         cout << "Bought $" << amount << " of " << entity.getName() << ".\n";
+
     }
 
     static void sell(FinancialEntity &entity, double amount)
@@ -143,6 +137,8 @@ public:
         cout << "Sold $" << amount << " of " << entity.getName() << ".\n";
     }
 };
+
+// Portfolio Manager class
 
 class PortfolioManager
 {
@@ -590,69 +586,6 @@ public:
             cout << entry.first << ": " << entry.second << "\n";
         }
         cout << "------------------------------------\n";
-    }
-};
-
-class TransactionHistory
-{
-private:
-    vector<Transaction> transactions; // Stores all transactions
-
-public:
-    // Add a transaction
-    void add(const string &asset, double amount, const string &type)
-    {
-        transactions.emplace_back(asset, amount, type);
-    }
-
-    // Display all transactions
-    void show() const
-    {
-        cout << "\n--- Transaction History ---\n";
-        for (const auto &tran : transactions)
-        {
-            cout << "Asset: " << tran.asset << ", Amount: $" << tran.amount
-                 << ", Type: " << tran.type << ", Date: " << tran.getDateString() << endl;
-        }
-        cout << "----------------------------\n";
-    }
-
-    // Search transactions by asset
-    void search(const string &asset) const
-    {
-        cout << "\n--- Transactions for Asset: " << asset << " ---\n";
-        bool found = false;
-        for (const auto &tran : transactions)
-        {
-            if (tran.asset == asset)
-            {
-                cout << "Asset: " << tran.asset << ", Amount: $" << tran.amount
-                     << ", Type: " << tran.type << ", Date: " << tran.getDateString() << endl;
-                found = true;
-            }
-        }
-        if (!found)
-            cout << "No transactions found for asset: " << asset << endl;
-        cout << "----------------------------\n";
-    }
-
-    // Filter transactions by type
-    void filter(const string &type) const
-    {
-        cout << "\n--- Transactions of Type: " << type << " ---\n";
-        bool found = false;
-        for (const auto &tran : transactions)
-        {
-            if (tran.type == type)
-            {
-                cout << "Asset: " << tran.asset << ", Amount: $" << tran.amount
-                     << ", Date: " << tran.getDateString() << endl;
-                found = true;
-            }
-        }
-        if (!found)
-            cout << "No transactions found of type: " << type << endl;
-        cout << "----------------------------\n";
     }
 };
 
