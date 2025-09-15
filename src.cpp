@@ -46,7 +46,6 @@ public:
 
         else
         {
-
             cout << "Insufficient value to complete the transaction.\n";
         }
     }
@@ -147,6 +146,16 @@ private:
     map<string, unique_ptr<FinancialEntity>> entities;
 
 public:
+    PortfolioManager() = default;
+
+    // disable copy
+    PortfolioManager(const PortfolioManager&) = delete;
+    PortfolioManager& operator=(const PortfolioManager&) = delete;
+
+    // enable move
+    PortfolioManager(PortfolioManager&&) = default;
+    PortfolioManager& operator=(PortfolioManager&&) = default;
+
     // Adding an Entity
     void addEntity(const string &name, double value, const string &type)
     {
@@ -726,15 +735,199 @@ public:
     }
 };
 
+// Consider moving methods to classes for separation of concerns
+// NOTE: You also have duplicate methods, only keep one
+
+void addEntity() {
+    PortfolioManager portfolio;
+    string name, type;
+    double value;
+
+    cout << "Enter entity name: ";
+    cin >> name;
+
+    cout << "Enter entity type (Asset/Liability/Equity): ";
+    cin >> type;
+
+    cout << "Enter entity value: ";
+    cin >> value;
+
+    portfolio.addEntity(name, value, type);
+}
+
+void buyEntity() {
+    PortfolioManager portfolio;
+    string name;
+    double amount;
+
+    cout << "Enter entity name to buy: ";
+    cin >> name;
+
+    cout << "Enter amount to buy: ";
+    cin >> amount;
+
+    portfolio.buyEntity(name, amount);
+}
+
+void sellEntity() {
+    PortfolioManager portfolio;
+    FileHandler filehandler;
+    string name;
+    double amount;
+
+    cout << "Enter entity name to sell: ";
+    cin >> name;
+
+    cout << "Enter amount to sell: ";
+    cin >> amount;
+
+    portfolio.sellEntity(name, amount);
+}
+
+void getTotalPortfolioValue(User& userSystem, PortfolioManager& portfolio, FileHandler& fileHandler) {
+    string currentUser = userSystem.getCurrentUsername();
+    fileHandler.savePortfolio(portfolio, currentUser);
+}
+
+void searchEntity(User& userSystem, PortfolioManager& portfolio) {
+    string currentUser = userSystem.getCurrentUsername();
+    string name;
+
+    cout << "Enter the name of the entity to search: ";
+    cin >> name;
+
+    FinancialEntity *entity = portfolio.searchEntity(name);
+
+    if (entity)
+    {
+        entity->showDetails();
+    }
+}
+
+void manageWatchlist(User& userSystem, Watchlist& watchlist, Watchlist& myWatchlist) {
+    string currentUser = userSystem.getCurrentUsername();
+    int watchlistChoice;
+    
+    cout << "\nWatchlist Options:\n";
+    cout << "|1. Add Asset to Watchlist\n";
+    cout << "|2. Remove Asset from Watchlist\n";
+    cout << "|3. Update Asset Price in Watchlist\n";
+    cout << "|4. View Watchlist Performance\n";
+    cout << "|5. Notify Significant Changes in Watchlist\n";
+    cout << "Enter your choice: ";
+    cin >> watchlistChoice;
+
+    switch (watchlistChoice) {
+        case 1: {
+            string assetName;
+            double initialPrice;
+            cout << "Enter asset name: ";
+            cin >> assetName;
+            cout << "Enter initial price: ";
+            cin >> initialPrice;
+            myWatchlist.add_asset(currentUser,assetName,initialPrice);
+            break;
+        }
+        case 2: {
+            string assetName;
+            cout << "Enter asset name to remove: ";
+            cin >> assetName;
+            myWatchlist.remove_asset(currentUser,assetName);
+            break;
+        }
+        case 3: {
+            string assetName;
+            double newPrice;
+            cout << "Enter asset name: ";
+            cin >> assetName;
+            cout << "Enter new price: ";
+            cin >> newPrice;
+            myWatchlist.update_price(currentUser,assetName,newPrice);
+        }
+        case 4: {
+            myWatchlist.track_performance(currentUser);
+            break;
+        }
+        case 5: {
+            double threshold;
+            cout << "Enter price change threshold (percentage): ";
+            cin >> threshold;
+            myWatchlist.notify_significant_changes(currentUser,threshold);
+            break;
+        }
+        default: 
+            cout << "Invalid Input";
+            break;
+    }
+}
+
+void loginUser(User& userSystem, PortfolioManager& portfolio, FileHandler& filehandler, Watchlist& watchlist, Watchlist& myWatchlist, PortfolioAnalytics& portfolioAnalytics) {
+    string currentUser = userSystem.getCurrentUsername();
+    filehandler.loadPortfolio(portfolio, currentUser);
+
+    int userChoice;
+    while (true)
+    {
+        cout << "\nPortfolio Management Options:\n";
+        cout << "|1. Add Entity\n";
+        cout << "|2. Show Portfolio\n";
+        cout << "|3. Buy Entity\n";
+        cout << "|4. Sell Entity\n";
+        cout << "|5. Save Portfolio\n";
+        cout << "|6. Get Total Value of Portfolio\n";
+        cout << "|7. Search for Entity\n";
+        cout << "|8. Generate Portfolio Report\n";
+        cout << "|9. Show Entity Distribution\n";
+        cout << "|10. Manage Watchlist\n";
+        cout << "|11. Logout\n";
+        cout << "Enter your choice: ";
+        cin >> userChoice;
+
+        try
+        {
+            switch (userChoice) {
+                case 1: // Add Entity
+                    addEntity(); break;
+                case 2: // Show Portfolio
+                    portfolio.showPortfolio(); break;
+                case 3: // Buy Entity
+                    buyEntity(); break;
+                case 4: // Sell Entity
+                    sellEntity(); break;
+                case 5: // Save Portfolio
+                    filehandler.savePortfolio(portfolio, currentUser); break;
+                case 6: // Get Total Portfolio Value
+                    getTotalPortfolioValue(userSystem, portfolio, filehandler); break;
+                case 7: // Search for Entity
+                    searchEntity(userSystem, portfolio); break;
+                case 8: // Generate Portfolio Report
+                    portfolioAnalytics.showReport(portfolio); break;
+                case 9: // Show Entity Distribution
+                    portfolioAnalytics.entityDistribution(portfolio); break;
+                case 10: // Manage Watchlist
+                    manageWatchlist(userSystem, watchlist, myWatchlist); break;
+                case 11: // Log out
+                    break;
+                default:
+                    cout << "Invalid choice! Please try again.\n";
+            }
+        } catch (const exception &e) {
+            cout << "An error occurred: " << e.what() << "\n";
+        }
+    }
+}
+
 int main()
 {
+    User userSystem;
+    PortfolioManager portfolio;
+    FileHandler fileHandler;
+    Watchlist watchlist;
+    Watchlist myWatchlist;
+    PortfolioAnalytics portfolioAnalytics;
+
     try
     {
-        User userSystem;
-        Watchlist watchlist;
-        FileHandler filehandler;
-        PortfolioAnalytics portfolioAnalytics;
-        Watchlist myWatchlist;
         int choice;
 
         while (true)
@@ -745,205 +938,17 @@ int main()
             cout << "Enter your choice: ";
             cin >> choice;
 
-            if (choice == 1)
-            {
-                userSystem.registerUser();
-            }
-
-            else if (choice == 2)
-            {
-                if (userSystem.loginUser())
-                {
-                    string currentUser = userSystem.getCurrentUsername();
-                    PortfolioManager &portfolio = userSystem.getPortfolioManager();
-                    filehandler.loadPortfolio(portfolio, currentUser);
-
-                    int userChoice;
-                    while (true)
-                    {
-                        cout << "\nPortfolio Management Options:\n";
-                        cout << "|1. Add Entity\n";
-                        cout << "|2. Show Portfolio\n";
-                        cout << "|3. Buy Entity\n";
-                        cout << "|4. Sell Entity\n";
-                        cout << "|5. Save Portfolio\n";
-                        cout << "|6. Get Total Value of Portfolio\n";
-                        cout << "|7. Search for Entity\n";
-                        cout << "|8. Generate Portfolio Report\n";
-                        cout << "|9. Show Entity Distribution\n";
-                        cout << "|10. Manage Watchlist\n";
-                        cout << "|11. Logout\n";
-                        cout << "Enter your choice: ";
-                        cin >> userChoice;
-
-                        try
-                        {
-                            if (userChoice == 1)
-                            {
-                                string name, type;
-                                double value;
-
-                                cout << "Enter entity name: ";
-                                cin >> name;
-
-                                cout << "Enter entity type (Asset/Liability/Equity): ";
-                                cin >> type;
-
-                                cout << "Enter entity value: ";
-                                cin >> value;
-
-                                portfolio.addEntity(name, value, type);
-                            }
-
-                            else if (userChoice == 2)
-                            {
-                                portfolio.showPortfolio();
-                            }
-
-                            else if (userChoice == 3)
-                            {
-                                string name;
-                                double amount;
-
-                                cout << "Enter entity name to buy: ";
-                                cin >> name;
-
-                                cout << "Enter amount to buy: ";
-                                cin >> amount;
-
-                                portfolio.buyEntity(name, amount);
-                            }
-
-                            else if (userChoice == 4)
-                            {
-                                string name;
-                                double amount;
-
-                                cout << "Enter entity name to sell: ";
-                                cin >> name;
-
-                                cout << "Enter amount to sell: ";
-                                cin >> amount;
-
-                                portfolio.sellEntity(name, amount);
-                            }
-
-                            else if (userChoice == 5)
-                            {
-                                filehandler.savePortfolio(portfolio, currentUser);
-                            }
-
-                            else if (userChoice == 6)
-                            {
-                                cout << "Total Portfolio Value: $" << portfolio.getTotalValue() << "\n";
-                            }
-
-                            else if (userChoice == 7)
-                            {
-                                string name;
-
-                                cout << "Enter the name of the entity to search: ";
-                                cin >> name;
-
-                                FinancialEntity *entity = portfolio.searchEntity(name);
-
-                                if (entity)
-                                {
-                                    entity->showDetails();
-                                }
-                            }
-
-                            else if (userChoice == 8)
-                            {
-                                portfolioAnalytics.showReport(portfolio);
-                            }
-
-                            else if (userChoice == 9)
-                            {
-                                portfolioAnalytics.entityDistribution(portfolio); // Show distribution
-                            }
-
-                            else if (userChoice == 10) // Watchlist management
-                            {
-                                int watchlistChoice;
-                                cout << "\nWatchlist Options:\n";
-                                cout << "|1. Add Asset to Watchlist\n";
-                                cout << "|2. Remove Asset from Watchlist\n";
-                                cout << "|3. Update Asset Price in Watchlist\n";
-                                cout << "|4. View Watchlist Performance\n";
-                                cout << "|5. Notify Significant Changes in Watchlist\n";
-                                cout << "Enter your choice: ";
-                                cin >> watchlistChoice;
-
-                                if (watchlistChoice == 1)
-                                {
-                                    string assetName;
-                                    double initialPrice;
-                                    cout << "Enter asset name: ";
-                                    cin >> assetName;
-                                    cout << "Enter initial price: ";
-                                    cin >> initialPrice;
-                                    myWatchlist.add_asset(currentUser,assetName,initialPrice);
-                                }
-                                else if (watchlistChoice == 2)
-                                {
-                                    string assetName;
-                                    cout << "Enter asset name to remove: ";
-                                    cin >> assetName;
-                                    myWatchlist.remove_asset(currentUser,assetName);
-                                }
-                                else if (watchlistChoice == 3)
-                                {
-                                    string assetName;
-                                    double newPrice;
-                                    cout << "Enter asset name: ";
-                                    cin >> assetName;
-                                    cout << "Enter new price: ";
-                                    cin >> newPrice;
-                                    myWatchlist.update_price(currentUser,assetName,newPrice);
-                                }
-                                else if (watchlistChoice == 4)
-                                {
-                                    myWatchlist.track_performance(currentUser);
-                                }
-                                else if (watchlistChoice == 5)
-                                {
-                                    double threshold;
-                                    cout << "Enter price change threshold (percentage): ";
-                                    cin >> threshold;
-                                    myWatchlist.notify_significant_changes(currentUser,threshold);
-                                }
-                                else{
-                                    cout << "Invalid Input";
-                                }
-                            }
-
-                            else if(userChoice == 11) // Logout
-                            {
-                                break; // Logout
-                            }
-                            else
-                            {
-                                cout << "Invalid choice! Please try again.\n";
-                            }
-                        }
-
-                        catch (const exception &e)
-                        {
-                            cout << "An error occurred: " << e.what() << "\n";
-                        }
-                    }
+            // Convert nested if-else statements to switch-case
+            switch (choice) {
+                case 1:
+                    userSystem.registerUser();
+                    break;
+                case 2: {
+                    if (userSystem.loginUser()) { loginUser(userSystem, portfolio, fileHandler, watchlist, myWatchlist, portfolioAnalytics); }
+                    break;
                 }
-            }
-
-            else if (choice == 3)
-            {
-                break; // Exit
-            }
-
-            else
-            {
-                cout << "Invalid choice! Please try again.\n";
+                case 3: break;
+                default: cout << "Invalid choice! Please try again.\n"; break;
             }
         }
     }
